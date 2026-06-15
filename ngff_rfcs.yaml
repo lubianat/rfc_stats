@@ -1,0 +1,453 @@
+last_updated: '2026-06-15T14:14:23Z'
+source: https://github.com/ome/ngff
+ngff_rfcs:
+  rfc0:
+    id: rfc/0
+    url: https://ngff.openmicroscopy.org/rfc/0
+    title: Consensus model
+    description: Versions of the NGFF specification up to and including v0.4 followed
+      a consensus model of decision making. This process is being recorded as RFC-0
+      to simplify referencing the former process in [RFC-1][2] and elsewhere.
+    status: null
+    state_code: null
+    status_text: This is a historical RFC, drafted after the fact, and has been outdated
+      by [RFC-1][1].
+    year: 2020
+    authors:
+    - name: Josh Moore
+    endorsers: []
+    oz_versions:
+    - '0.5'
+    pr_url: https://github.com/ome/ngff/pull/3
+    pr_merge_date: '2020-11-30'
+    last_text_commit_date: '2024-08-30'
+    reviews: []
+    comments: []
+    responses: []
+    versions: []
+  rfc1:
+    id: rfc/1
+    url: https://ngff.openmicroscopy.org/rfc/1
+    title: null
+    description: 'This RFC defines the high-level decision making process for changes
+      within the NGFF community. These changes are defined in "Request for Comments"
+      (RFCs) and therefore this RFC is self-referential: it is following the process
+      that it itself defines.'
+    status: Adopted
+    state_code: S4
+    status_text: This RFC has been adopted (S4).
+    year: 2024
+    authors:
+    - name: Josh Moore
+    endorsers:
+    - name: Jean-Marie Burel
+    - name: Will Moore
+    - name: Juan Nunez-Iglesias
+    - name: Norman Rzepka
+    - name: Jan Eglinger
+    - name: Joel Lüthi
+    oz_versions: []
+    pr_url: https://github.com/ome/ngff/pull/222
+    pr_merge_date: '2024-02-21'
+    last_text_commit_date: '2026-03-05'
+    reviews:
+    - id: rfc/1/reviews/1
+      url: https://ngff.openmicroscopy.org/rfc/1/reviews/1
+      authors:
+      - name: Kevin Yamauchi
+      - name: Virginie Uhlmann
+      date: '2024-03-05'
+    - id: rfc/1/reviews/1b
+      url: https://ngff.openmicroscopy.org/rfc/1/reviews/1b
+      authors:
+      - name: Kevin Yamauchi
+      - name: Joel Lüthi
+      - name: Virginie Uhlmann
+      date: '2024-10-03'
+      related_to: rfc/1/reviews/1
+    - id: rfc/1/reviews/2
+      url: https://ngff.openmicroscopy.org/rfc/1/reviews/2
+      authors:
+      - name: Davis Bennett
+      - name: John Bogovic
+      - name: Michael Innerberger
+      - name: Mark Kittisopikul
+      - name: Virginia Scarlett
+      - name: Yurii Zubov
+      date: '2024-02-26'
+    - id: rfc/1/reviews/2b
+      url: https://ngff.openmicroscopy.org/rfc/1/reviews/2b
+      authors:
+      - name: John Bogovic
+      - name: Michael Innerberger
+      - name: Virginia Scarlett
+      date: '2024-10-11'
+      related_to: rfc/1/reviews/2
+    - id: rfc/1/reviews/3
+      url: https://ngff.openmicroscopy.org/rfc/1/reviews/3
+      authors:
+      - name: Matthew Hartley
+      date: '2024-03-05'
+    comments:
+    - id: rfc/1/comments/1
+      url: https://ngff.openmicroscopy.org/rfc/1/comments/1
+      authors:
+      - name: Wouter-Michiel Vierdag
+      - name: Luca Marconato
+      date: '2024-01-13'
+    - id: rfc/1/comments/2
+      url: https://ngff.openmicroscopy.org/rfc/1/comments/2
+      authors:
+      - name: Matt McCormick
+      date: '2024-01-09'
+    responses:
+    - id: rfc/1/responses/1
+      url: https://ngff.openmicroscopy.org/rfc/1/responses/1
+      authors:
+      - name: Josh Moore
+      date: '2024-08-29'
+    versions: []
+  rfc2:
+    id: rfc/2
+    url: https://ngff.openmicroscopy.org/rfc/2
+    title: Zarr v3
+    description: This RFC adopts Zarr v3 as the new underlying format of OME-Zarr.
+    status: Adopted
+    state_code: S1
+    status_text: This RFC is currently in SPEC state (S1).
+    year: 2024
+    authors:
+    - name: Norman Rzepka
+    endorsers:
+    - name: Davis Bennett
+    - name: Kevin Yamauchi
+    - name: John Bogovic
+    - name: Matthew Hartley
+    - name: Christian Tischer
+    - name: Joel Lüthi
+    - name: Constantin Pape
+    - name: Will Moore
+    - name: Juan Nunez-Iglesias
+    - name: Eric Perlman
+    - name: Ziwen Liu
+    - name: Lachlan Deakin
+    oz_versions:
+    - '0.4'
+    - '0.5'
+    pr_url: https://github.com/ome/ngff/pull/227
+    pr_merge_date: '2024-04-30'
+    last_text_commit_date: '2026-03-05'
+    reviews:
+    - id: rfc/2/reviews/1
+      url: https://ngff.openmicroscopy.org/rfc/2/reviews/1
+      authors:
+      - name: Melissa Linkert
+      - name: Sébastien Besson
+      - name: Chris Allan
+      - name: Jason Swedlow
+      date: '2024-05-23'
+    - id: rfc/2/reviews/1b
+      url: https://ngff.openmicroscopy.org/rfc/2/reviews/1b
+      authors:
+      - name: Melissa Linkert
+      - name: Sébastien Besson
+      - name: Chris Allan
+      - name: Jason Swedlow
+      date: '2024-08-05'
+      related_to: rfc/2/reviews/1
+    - id: rfc/2/reviews/2
+      url: https://ngff.openmicroscopy.org/rfc/2/reviews/2
+      authors:
+      - name: Yaroslav O. Halchenko
+      date: '2024-06-10'
+    - id: rfc/2/reviews/2b
+      url: https://ngff.openmicroscopy.org/rfc/2/reviews/2b
+      authors:
+      - name: Yaroslav O. Halchenko
+      date: '2024-09-11'
+      related_to: rfc/2/reviews/2
+    - id: rfc/2/reviews/3
+      url: https://ngff.openmicroscopy.org/rfc/2/reviews/3
+      authors:
+      - name: Jeremy Maitin-Shepard
+      date: '2024-04-30'
+    - id: rfc/2/reviews/3b
+      url: https://ngff.openmicroscopy.org/rfc/2/reviews/3b
+      authors:
+      - name: Jeremy Maitin-Shepard
+      date: '2024-09-11'
+      related_to: rfc/2/reviews/3
+    comments: []
+    responses: []
+    versions: []
+  rfc3:
+    id: rfc/3
+    url: https://ngff.openmicroscopy.org/rfc/3
+    title: more dimensions for thee
+    description: OME-Zarr version 0.4 restricts the number, names, ordering, and type
+      of axes that are allowed in the axes metadata. These restrictions have limited
+      conversion of proprietary datasets, usage by microscope vendors[^1], and usage
+      by novel microscopy modalities[^2].
+    status: Under review
+    state_code: R1
+    status_text: This RFC is currently in RFC state R1 (send for review).
+    year: 2024
+    authors:
+    - name: Juan Nunez-Iglesias
+    endorsers:
+    - name: Talley Lambert
+    - name: Norman Rzepka
+    - name: Davis Bennett
+    - name: Doug Shepherd
+    - name: John Bogovic
+    - name: Eric Perlman
+    - name: Lachlan Deakin
+    - name: Sebastian Rhode
+    oz_versions:
+    - '0.4'
+    pr_url: https://github.com/ome/ngff/pull/239
+    pr_merge_date: '2024-12-17'
+    last_text_commit_date: '2026-03-05'
+    reviews: []
+    comments:
+    - id: rfc/3/comments/1
+      url: https://ngff.openmicroscopy.org/rfc/3/comments/1
+      authors:
+      - name: Benedikt Best
+      date: '2026-02-02'
+    - id: rfc/3/comments/2
+      url: https://ngff.openmicroscopy.org/rfc/3/comments/2
+      authors:
+      - name: Chris Barnes
+      date: '2026-02-05'
+    responses: []
+    versions: []
+  rfc4:
+    id: rfc/4
+    url: https://ngff.openmicroscopy.org/rfc/4
+    title: Axis Orientation
+    description: This RFC proposes the addition of an optional orientation field to
+      the OME-NGFF axis description. This field will provide explicit metadata about
+      the orientation in an image using a controlled vocabulary. For anatomical data,
+      this includes anatomical orientation information. The goal is to preserve essential
+      biological information and eliminate assumptions about orientation which can
+      lead to errors in downstream analysis and alignment to anatomical atlases.
+    status: Under review
+    state_code: R1
+    status_text: This RFC is currently in RFC state R1 (send for review).
+    year: 2024
+    authors:
+    - name: David Feng
+    - name: Matthew McCormick
+    - name: Wouter-Michiel Vierdag
+    endorsers: []
+    oz_versions: []
+    pr_url: https://github.com/ome/ngff/pull/253
+    pr_merge_date: '2024-09-13'
+    last_text_commit_date: '2026-03-05'
+    reviews: []
+    comments:
+    - id: rfc/4/comments/1
+      url: https://ngff.openmicroscopy.org/rfc/4/comments/1
+      authors:
+      - name: David Stansby
+      date: '2025-04-02'
+    - id: rfc/4/comments/2
+      url: https://ngff.openmicroscopy.org/rfc/4/comments/2
+      authors:
+      - name: Chris Barnes
+      date: '2026-02-05'
+    responses: []
+    versions: []
+  rfc5:
+    id: rfc/5
+    url: https://ngff.openmicroscopy.org/rfc/5
+    title: Coordinate Systems and Transformations
+    description: This RFC provides first-class support for spatial and coordinate
+      transformations in OME-Zarr.
+    status: Under review
+    state_code: R4
+    status_text: This RFC is currently in RFC state R4 (authors prepare responses).
+    year: 2024
+    authors:
+    - name: John Bogovic
+    - name: Davis Bennett
+    - name: Luca Marconato
+    - name: Matt McCormick
+    - name: Stephan Saalfeld
+    - name: Johannes Soltwedel
+    endorsers:
+    - name: Will Moore
+    - name: David Stansby
+    - name: Norman Rzepka
+    oz_versions:
+    - '0.4'
+    pr_url: https://github.com/ome/ngff/pull/138
+    pr_merge_date: null
+    last_text_commit_date: '2026-03-05'
+    reviews: []
+    comments:
+    - id: rfc/5/comments/1
+      url: https://ngff.openmicroscopy.org/rfc/5/comments/1
+      authors:
+      - name: Ilan Gold
+      date: '2025-02-20'
+    - id: rfc/5/comments/2
+      url: https://ngff.openmicroscopy.org/rfc/5/comments/2
+      authors:
+      - name: Jeremy Maitin-Shephard
+      date: '2025-02-20'
+    - id: rfc/5/comments/3
+      url: https://ngff.openmicroscopy.org/rfc/5/comments/3
+      authors:
+      - name: David Stansby
+      date: '2025-10-10'
+    responses: []
+    versions: []
+  rfc6:
+    id: rfc/6
+    url: https://ngff.openmicroscopy.org/rfc/6
+    title: Flattening the multiscales array
+    description: This RFC proposes to change the multiscales array into a single multiscale
+      object.
+    status: Withdrawn
+    state_code: R9
+    status_text: This RFC has been withdrawn (R9) since it is superseded by RFC-8.
+    year: 2024
+    authors:
+    - name: Norman Rzepka
+    endorsers:
+    - name: David Stansby
+    - name: Davis Bennett
+    - name: Will Moore
+    - name: Lachlan Deakin
+    - name: Joel Lüthi
+    - name: Eric Perlman
+    - name: Johannes Soltwedel
+    oz_versions:
+    - '0.5'
+    pr_url: null
+    pr_merge_date: null
+    last_text_commit_date: '2026-04-10'
+    reviews: []
+    comments:
+    - id: rfc/6/comments/1
+      url: https://ngff.openmicroscopy.org/rfc/6/comments/1
+      authors:
+      - name: Chris Barnes
+      - name: Davis Bennett
+      date: '2025-11-05'
+    responses: []
+    versions: []
+  rfc7:
+    id: rfc/7
+    url: https://ngff.openmicroscopy.org/rfc/7
+    title: Channel provenance
+    description: null
+    status: null
+    state_code: null
+    status_text: null
+    year: null
+    authors: []
+    endorsers: []
+    oz_versions: []
+    pr_url: null
+    pr_merge_date: null
+    last_text_commit_date: '2025-12-17'
+    reviews: []
+    comments: []
+    responses: []
+    versions: []
+  rfc8:
+    id: rfc/8
+    url: https://ngff.openmicroscopy.org/rfc/8
+    title: Collections
+    description: This proposal adds a new "collection" concept to OME-Zarr.
+    status: Draft
+    state_code: D1
+    status_text: 'This proposal is early. Status: D1'
+    year: 2024
+    authors:
+    - name: Norman Rzepka
+    - name: Eric Perlman
+    - name: Joel Lüthi
+    - name: Lorenzo Cerrone
+    - name: Johannes Soltwedel
+    - name: Christian Tischer
+    - name: Matthew Hartley
+    endorsers: []
+    oz_versions: []
+    pr_url: https://github.com/ome/ngff/pull/137
+    pr_merge_date: null
+    last_text_commit_date: '2026-06-02'
+    reviews: []
+    comments: []
+    responses: []
+    versions: []
+  rfc9:
+    id: rfc/9
+    url: https://ngff.openmicroscopy.org/rfc/9
+    title: Zipped OME-Zarr
+    description: The goal of this RFC is to standardize the storage of OME-Zarr hierarchies
+      within ZIP archives as single files.
+    status: Under review
+    state_code: R2
+    status_text: This RFC is currently in state R2 (waiting on reviewers).
+    year: 2025
+    authors:
+    - name: Jonas Windhager
+    - name: Norman Rzepka
+    - name: Mark Kittisopikul
+    endorsers: []
+    oz_versions: []
+    pr_url: https://github.com/ome/ngff/pull/316
+    pr_merge_date: '2025-11-11'
+    last_text_commit_date: '2026-03-05'
+    reviews:
+    - id: rfc/9/reviews/1
+      url: https://ngff.openmicroscopy.org/rfc/9/reviews/1
+      authors:
+      - name: Pete Bankhead
+      date: '2026-01-26'
+    - id: rfc/9/reviews/2
+      url: https://ngff.openmicroscopy.org/rfc/9/reviews/2
+      authors:
+      - name: Kola Babalola
+      - name: Matthew Hartley
+      date: '2026-01-29'
+    - id: rfc/9/reviews/3
+      url: https://ngff.openmicroscopy.org/rfc/9/reviews/3
+      authors:
+      - name: Curtis Rueden
+      date: '2026-01-30'
+    comments:
+    - id: rfc/9/comments/1
+      url: https://ngff.openmicroscopy.org/rfc/9/comments/1
+      authors:
+      - name: Matt McCormick
+      date: '2025-11-15'
+    - id: rfc/9/comments/2
+      url: https://ngff.openmicroscopy.org/rfc/9/comments/2
+      authors:
+      - name: Joost de Folter
+      date: '2025-12-03'
+    - id: rfc/9/comments/3
+      url: https://ngff.openmicroscopy.org/rfc/9/comments/3
+      authors:
+      - name: Chris Barnes
+      date: '2025-12-12'
+    - id: rfc/9/comments/4
+      url: https://ngff.openmicroscopy.org/rfc/9/comments/4
+      authors:
+      - name: Lenard Spiecker
+      - name: Matthias Grunwald
+      date: '2026-02-05'
+    - id: rfc/9/comments/5
+      url: https://ngff.openmicroscopy.org/rfc/9/comments/5
+      authors:
+      - name: Anna Kreshuk
+      - name: Dominik Kutra
+      - name: Benedikt Best
+      date: '2026-01-09'
+    responses: []
+    versions: []
