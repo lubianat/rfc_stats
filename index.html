@@ -86,6 +86,12 @@
     padding: 11px 14px;
     white-space: nowrap;
   }
+  /* Headers with an explanatory tooltip get a dotted underline + help cursor */
+  table.dataTable thead th[title] {
+    text-decoration: underline dotted var(--rtd-muted);
+    text-underline-offset: 3px;
+    cursor: help;
+  }
   table.dataTable tbody td {
     padding: 9px 14px;
     border-top: 1px solid var(--rtd-rule);
@@ -168,44 +174,32 @@
     <p class="updated" id="updated"></p>
     <div id="boot"></div>
 
-    <section id="overview-section" hidden>
-      <h2><span class="anchor">#</span> Overview</h2>
-      <p>📏🏗👷‍♀️🧱🦺 in development 📏🏗👷‍♀️🧱🦺</p>
-      <p class="lead">One row per RFC. Review and comment counts are tallied from the
-        records table in each RFC document.</p>
-      <table id="overview" class="display" style="width:100%">
-        <thead>
-          <tr>
-            <th class="num">RFC</th>
-            <th>Title</th>
-            <th class="num">Year<br><span class="muted" style="font-weight:400;font-size:.75rem;">merge date</span></th>
-            <th class="num">Last change</th>
-            <th class="num">Reviews</th>
-            <th class="num">Comments</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
+
 
     <section id="detail-section" hidden>
-      <h2><span class="anchor">#</span> All data points</h2>
+
+             <h2>OME-NGFF RFC Stats</h2>
+
+
+        <p>📏🏗👷‍♀️🧱🦺 in development 📏🏗👷‍♀️🧱🦺</p>
+
       <p class="lead">Every field captured in <code>ngff_rfcs.yaml</code>, one row per RFC.</p>
       <div style="overflow-x:auto;">
         <table id="detail" class="display" style="width:100%">
           <thead>
             <tr>
-              <th class="num">RFC</th>
-              <th>Status</th>
-              <th class="num">PR merged</th>
-              <th class="num">Last commit</th>
-              <th>Authors</th>
-              <th>Endorsers</th>
-              <th class="num">Reviews</th>
-              <th class="num">Comments</th>
-              <th class="num">Responses</th>
-              <th class="num">Versions</th>
-              <th>Links</th>
+              <th class="num" title="Request for Comments number">RFC</th>
+              <th>Title</th>
+              <th title="Current state of the RFC (hover a pill for the full status)">Status</th>
+              <th class="num" title="Date the pull request was merged (mm/yy; links to the PR)">PR</th>
+              <th class="num" title="Date of the last commit to the RFC text (mm/yy)">Last</th>
+              <th class="num" title="Number of endorsers (+1s); hover for names">+1s</th>
+              <th class="num" title="Number of reviews">Rev.</th>
+              <th class="num" title="Number of comments">Comm.</th>
+              <th class="num" title="Number of author responses">Resp.</th>
+              <th class="num" title="Number of OME-Zarr versions affected">Ver.</th>
+              <th title="Authors, shown as initials; hover for full names">Auth.</th>
+
             </tr>
           </thead>
           <tbody></tbody>
@@ -257,6 +251,44 @@ function peopleCompact(list) {
   return `<span class="compact-people" title="${full}">${first} <span class="more">+${extra}</span></span>`;
 }
 
+// Count of people, with the full list available on hover.
+function peopleCount(list) {
+  if (!Array.isArray(list) || !list.length) return "0";
+  const names = list.map(p => (p && p.name ? p.name : p)).filter(Boolean);
+  if (!names.length) return "0";
+  return `<span title="${esc(names.join(", "))}">${names.length}</span>`;
+}
+
+// Authors as terse initials of the first author, then "+N" if there are more,
+// e.g. "JB +5". Full names on hover.
+function peopleInitials(list) {
+  if (!Array.isArray(list) || !list.length) return dash;
+  const names = list.map(p => (p && p.name ? p.name : p)).filter(Boolean);
+  if (!names.length) return dash;
+  const initials = n =>
+    String(n).trim().split(/\s+/).map(w => w[0] || "").join("").toUpperCase();
+  const first = esc(initials(names[0]));
+  const extra = names.length - 1;
+  const full = esc(names.join(", "));
+  if (extra <= 0) return `<span title="${full}">${first}</span>`;
+  return `<span class="compact-people" title="${full}">${first} <span class="more">+${extra}</span></span>`;
+}
+
+// Format an ISO date (YYYY-MM-DD) as mm/yy, with the full date on hover.
+// Optionally wrap the result in a link. A data-sort attribute carries the raw
+// ISO date so DataTables sorts chronologically rather than alphabetically.
+function dateShort(iso, href) {
+  if (!iso) return { display: dash, sort: "" };
+  const s = String(iso);
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+  const short = m ? `${m[2]}/${m[1].slice(2)}` : esc(s);
+  const inner = `<span title="${esc(s)}">${short}</span>`;
+  const display = href
+    ? `<a href="${esc(href)}" target="_blank" rel="noopener">${inner}</a>`
+    : inner;
+  return { display, sort: s };
+}
+
 // Compact summary for review/comment lists: the total count followed by the
 // short id of each entry (1, 1b, 2 …) linked to its own URL, e.g. "4 (1, 1b, 2, 2b)".
 function entriesCompact(list) {
@@ -287,7 +319,6 @@ function descOf(rfc) {
   return rfc.title || rfc.description || "";
 }
 
-// Year shown in the overview: prefer the PR merge date (most reliable signal),
 // fall back to the scraper's computed `year`.
 function mergeYear(rfc) {
   if (rfc.pr_merge_date) return String(rfc.pr_merge_date).slice(0, 4);
@@ -307,49 +338,24 @@ function render(doc) {
 
   const len = x => Array.isArray(x) ? x.length : 0;
 
-  // ---- Overview table ----
-  const overviewRows = rfcs.map(r => {
-    const desc = esc(descOf(r)) || dash;
-    return [
-      rfcLink(r),
-      r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">${desc}</a>` : desc,
-      mergeYear(r) != null ? esc(mergeYear(r)) : dash,
-      r.last_text_commit_date ? esc(r.last_text_commit_date) : dash,
-      len(r.reviews),
-      len(r.comments),
-    ];
-  });
 
-  $("#overview").DataTable({
-    data: overviewRows,
-    paging: false,
-    info: false,
-    order: [[0, "asc"]],
-    columnDefs: [
-      { targets: [0, 2, 3, 4, 5], className: "num" },
-      { targets: 0, type: "num", render: (d, t) =>
-          t === "sort" ? (/(\d+)/.exec(d) || [0,1e9])[1] * 1 : d },
-    ],
-    language: { search: "Filter:" },
-  });
 
   // ---- Detail table ----
   const detailRows = rfcs.map(r => {
-    const links = [];
-    if (r.url)    links.push(`<a href="${esc(r.url)}" target="_blank" rel="noopener">doc</a>`);
-    if (r.pr_url) links.push(`<a href="${esc(r.pr_url)}" target="_blank" rel="noopener">PR</a>`);
+    const pr   = dateShort(r.pr_merge_date, r.pr_url);
+    const last = dateShort(r.last_text_commit_date);
     return [
       rfcLink(r),
+      r.title,
       statusPill(r.status, r.state_code, r.status_text),
-      r.pr_merge_date ? esc(r.pr_merge_date) : dash,
-      r.last_text_commit_date ? esc(r.last_text_commit_date) : dash,
-      peopleCompact(r.authors),
-      peopleCompact(r.endorsers),
+      { display: pr.display,   "@data-sort": pr.sort },
+      { display: last.display, "@data-sort": last.sort },
+      peopleCount(r.endorsers),
       entriesCompact(r.reviews),
       entriesCompact(r.comments),
       entriesCompact(r.responses),
       entriesCompact(r.versions),
-      links.length ? links.join(" · ") : dash,
+      peopleInitials(r.authors),
     ];
   });
 
@@ -359,7 +365,12 @@ function render(doc) {
     info: true,
     order: [[0, "asc"]],
     columnDefs: [
-      { targets: [0, 2, 3], className: "num" },
+      { targets: [0,  3, 4, 5], className: "num" },
+      // Date columns: render display HTML, sort on the raw ISO date string.
+      { targets: [3, 4],
+        render: (d, t) => (t === "sort" || t === "type") ? (d["@data-sort"] || "") : d.display },
+      { targets: 5, type: "num", render: (d, t) =>
+          t === "sort" ? (parseInt(String(d).replace(/<[^>]*>/g, ""), 10) || 0) : d },
       { targets: [6, 7, 8, 9], className: "recs",
         type: "num",
         render: (d, t) => t === "sort" ? (parseInt(d, 10) || 0) : d },
@@ -369,7 +380,6 @@ function render(doc) {
     language: { search: "Filter:" },
   });
 
-  document.getElementById("overview-section").hidden = false;
   document.getElementById("detail-section").hidden = false;
   document.getElementById("footer").innerHTML =
     `Source: <a href="${esc(doc.source || "https://github.com/ome/ngff")}" target="_blank" rel="noopener">${esc(doc.source || "ome/ngff")}</a>. ` +
