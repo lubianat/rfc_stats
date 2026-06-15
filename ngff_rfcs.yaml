@@ -1,4 +1,4 @@
-last_updated: '2026-06-15T15:39:45Z'
+last_updated: '2026-06-15T16:06:50Z'
 source: https://github.com/ome/ngff
 ngff_rfcs:
   rfc0:
@@ -282,8 +282,8 @@ ngff_rfcs:
     - name: Norman Rzepka
     oz_versions:
     - '0.4'
-    pr_url: https://github.com/ome/ngff/pull/138
-    pr_merge_date: null
+    pr_url: github.com/ome/ngff/pull/255
+    pr_merge_date: '2024-10-08'
     last_text_commit_date: '2026-03-05'
     reviews: []
     comments:
