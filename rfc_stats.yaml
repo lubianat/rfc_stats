@@ -1,0 +1,42 @@
+
+ngff_rfcs:
+
+  -rfc1:
+
+  -rfc2:
+    id: rfc/2
+    url: https://ngff.openmicroscopy.org/rfc/2
+    authors:
+    endorsers:
+    pr_merge_date:
+    last_text_commit_date: # Last commit that changed the main text
+    title:
+    description:
+    oz_versions: ["0.5"]
+    reviews:
+      - authors:
+          - name: Sébastien Besson
+          - name: Melissa Linkert
+          - name: Chris Allan
+          - name: Marc Bruce
+          - name: Jason Swedlow
+        merge_date: 2024-11-11 # The date of the review
+        url: https://ngff.openmicroscopy.org/rfc/2/reviews/1
+        id: rfc/2/reviews/1
+      - authors:
+          - name: Sébastien Besson
+          - name: Melissa Linkert
+        merged_date:
+        url: https://ngff.openmicroscopy.org/rfc/2/reviews/1b
+        id: rfc/2/reviews/1b
+        related_to: rfc/2/reviews/1
+    comments:
+      - authors:
+        date:
+        url:
+        id:
+    responses:
+      - date
+        url:
+        id:
+    versions:
