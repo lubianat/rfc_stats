@@ -25,6 +25,11 @@ GITHUB_PR = "https://github.com/ome/ngff/pull/"
 
 REQUEST_TIMEOUT = 30
 
+# Fields that, once present in the existing ngff_rfcs.yaml, are treated as
+# manually curated and are NOT overwritten by a fresh scrape. Everything else
+# is recomputed on every run.
+PRESERVED_FIELDS = ("title", "description", "url", "id", "pr_url")
+
 KNOWN_FIELDS = {"role", "name", "github_handle", "institution", "date", "status"}
 DEFAULT_HEADERS = ["role", "name", "github_handle", "institution", "date", "status"]
 
@@ -392,6 +397,14 @@ def find_pr_number(md: str, records: list[dict[str, str]]) -> str | None:
     return m.group(1) if m else None
 
 
+def pr_number_from_url(pr_url: str | None) -> str | None:
+    """Extract the trailing PR number from a pull-request URL, or None."""
+    if not pr_url:
+        return None
+    m = re.search(r"/pull/(\d+)", pr_url)
+    return m.group(1) if m else None
+
+
 def build_sub_records(
     records: list[dict[str, str]], rfc_number: int, kind: str
 ) -> list[dict[str, Any]]:
@@ -439,7 +452,9 @@ def role_of(rec: dict[str, str]) -> str:
     return strip_markdown(rec.get("status", "")).lower()
 
 
-def build_rfc(rfc_number: int) -> dict[str, Any] | None:
+def build_rfc(
+    rfc_number: int, existing: dict[str, Any] | None = None
+) -> dict[str, Any] | None:
     url = RAW_GITHUB_BASE + f"rfc/{rfc_number}/index.md"
     md = fetch_text(url)
     if md is None:
@@ -492,6 +507,13 @@ def build_rfc(rfc_number: int) -> dict[str, Any] | None:
         "versions": build_sub_records(records, rfc_number, "versions"),
     }
 
+    # Apply manually-curated fields (title/description/url/id/pr_url) BEFORE the
+    # GitHub enrichment so that a hand-edited pr_url drives the pr_merge_date
+    # lookup. If the curated entry supplies a pr_url, its PR number wins over the
+    # one scraped from the index.md.
+    apply_preserved_fields(rfc, existing)
+    pr_number = pr_number_from_url(rfc.get("pr_url")) or pr_number
+
     enrich_with_github(rfc, rfc_number, pr_number)
 
     rfc["authors_dates"] = author_dates
@@ -531,6 +553,53 @@ def enrich_with_github(
 
 
 # ----------------------------------------------------------------------------
+# Preserve manually-curated fields across runs
+# ----------------------------------------------------------------------------
+def load_existing() -> dict[str, Any]:
+    """Return the existing {rfc<n>: {...}} map from OUT_PATH, or {} if absent.
+
+    Tolerant of a missing or unparseable file: in either case we just return an
+    empty map and the run proceeds as a fresh scrape.
+    """
+    if not OUT_PATH.exists():
+        return {}
+    try:
+        loaded = yaml.safe_load(OUT_PATH.read_text()) or {}
+    except yaml.YAMLError as exc:
+        logging.warning("Could not parse existing %s (%s); ignoring", OUT_PATH, exc)
+        return {}
+    rfcs = loaded.get("ngff_rfcs")
+    return rfcs if isinstance(rfcs, dict) else {}
+
+
+def apply_preserved_fields(
+    fresh: dict[str, Any], existing: dict[str, Any] | None
+) -> None:
+    """Overlay manually-curated fields from `existing` onto a freshly-built RFC.
+
+    A preserved field is only carried over when it is actually present in the
+    existing entry (i.e. the key exists and the value is not None/empty). This
+    lets a hand-edited title or description survive a re-scrape while still
+    allowing newly-scraped values to fill fields that were never set.
+    """
+    if not isinstance(existing, dict):
+        return
+    for field in PRESERVED_FIELDS:
+        if field not in existing:
+            continue
+        value = existing[field]
+        if value is None or value == "":
+            continue
+        if fresh.get(field) != value:
+            logging.info(
+                "RFC %s: preserving curated %s (keeping existing value)",
+                fresh.get("id"),
+                field,
+            )
+        fresh[field] = value
+
+
+# ----------------------------------------------------------------------------
 # Discovery + main
 # ----------------------------------------------------------------------------
 def discover_rfc_numbers(max_probe: int = 60) -> list[int]:
@@ -565,9 +634,15 @@ def main() -> None:
         logging.error("No RFCs discovered; aborting")
         return
 
+    existing = load_existing()
+    if existing:
+        logging.info(
+            "Loaded %d existing RFC entries for field preservation", len(existing)
+        )
+
     rfcs: dict[str, Any] = {}
     for n in rfc_numbers:
-        rfc = build_rfc(n)
+        rfc = build_rfc(n, existing.get(f"rfc{n}"))
         if rfc:
             rfcs[f"rfc{n}"] = rfc
 

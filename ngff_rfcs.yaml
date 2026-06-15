@@ -1,4 +1,4 @@
-last_updated: '2026-06-15T14:14:23Z'
+last_updated: '2026-06-15T15:39:45Z'
 source: https://github.com/ome/ngff
 ngff_rfcs:
   rfc0:
@@ -28,7 +28,7 @@ ngff_rfcs:
   rfc1:
     id: rfc/1
     url: https://ngff.openmicroscopy.org/rfc/1
-    title: null
+    title: The RFC process
     description: 'This RFC defines the high-level decision making process for changes
       within the NGFF community. These changes are defined in "Request for Comments"
       (RFCs) and therefore this RFC is self-referential: it is following the process
@@ -366,7 +366,7 @@ ngff_rfcs:
     status: Draft
     state_code: D1
     status_text: 'This proposal is early. Status: D1'
-    year: 2024
+    year: 2026
     authors:
     - name: Norman Rzepka
     - name: Eric Perlman
@@ -377,8 +377,8 @@ ngff_rfcs:
     - name: Matthew Hartley
     endorsers: []
     oz_versions: []
-    pr_url: https://github.com/ome/ngff/pull/137
-    pr_merge_date: null
+    pr_url: https://github.com/ome/ngff/pull/343
+    pr_merge_date: '2026-06-03'
     last_text_commit_date: '2026-06-02'
     reviews: []
     comments: []
