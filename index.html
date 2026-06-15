@@ -114,6 +114,9 @@
     font-family: "Roboto Slab", serif;
   }
 
+  /* Title cell: dotted underline hints there's a description on hover */
+  .title-cell { cursor: help; text-decoration: underline dotted var(--rtd-rule); text-underline-offset: 3px; }
+
   /* Status pills mirror RTD admonition colors */
   .status { font-size: .82rem; font-weight: 700; padding: 2px 8px; border-radius: 3px; white-space: nowrap; }
   .status.adopted    { background: #dbfae4; color: #1f7a3d; }
@@ -130,6 +133,11 @@
 
   .muted { color: var(--rtd-muted); }
   .nowrap { white-space: nowrap; }
+
+  /* Clickable record-count cells open a modal */
+  .recs.clickable { cursor: pointer; }
+  .recs.clickable:hover .rec-count { text-decoration: underline; color: var(--rtd-blue-d); }
+  .rec-count { color: var(--rtd-blue); font-weight: 700; }
 
   /* DataTables controls */
   .dataTables_wrapper .dataTables_filter input,
@@ -166,6 +174,39 @@
     padding: 16px 18px; border-radius: 4px; font-size: .9rem;
   }
   .error code { color: #a33; background: #f8d7d7; }
+
+  /* ---- Modal ---- */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(52,49,49,.45);
+    display: none; align-items: flex-start; justify-content: center;
+    padding: 60px 20px; z-index: 1000;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff; border: 1px solid var(--rtd-rule); border-radius: 5px;
+    max-width: 560px; width: 100%; max-height: 80vh; overflow-y: auto;
+    box-shadow: 0 12px 40px rgba(0,0,0,.18);
+  }
+  .modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; border-bottom: 2px solid var(--rtd-blue);
+  }
+  .modal-head h3 {
+    margin: 0; font-family: "Roboto Slab", serif; font-size: 1.1rem; color: var(--rtd-dark);
+  }
+  .modal-close {
+    border: none; background: none; font-size: 1.4rem; line-height: 1;
+    color: var(--rtd-muted); cursor: pointer; padding: 0 4px;
+  }
+  .modal-close:hover { color: var(--rtd-dark); }
+  .modal-body { padding: 8px 18px 18px; }
+  .modal-body .empty { color: var(--rtd-muted); font-size: .9rem; padding: 8px 0; }
+  .rec-list { margin: 0; padding: 0; list-style: none; }
+  .rec-list li { padding: 12px 0; border-top: 1px solid var(--rtd-rule); }
+  .rec-list li:first-child { border-top: none; }
+  .rec-id { font-weight: 700; font-family: "Roboto Slab", serif; color: var(--rtd-dark); }
+  .rec-meta { color: var(--rtd-muted); font-size: .85rem; margin-top: 2px; }
+  .rec-authors { margin-top: 2px; font-size: .9rem; }
 </style>
 </head>
 
@@ -189,15 +230,15 @@
           <thead>
             <tr>
               <th class="num" title="Request for Comments number">RFC</th>
-              <th>Title</th>
+              <th title="RFC title — hover a cell for the full description">Title</th>
               <th title="Current state of the RFC (hover a pill for the full status)">Status</th>
               <th class="num" title="Date the pull request was merged (mm/yy; links to the PR)">PR</th>
               <th class="num" title="Date of the last commit to the RFC text (mm/yy)">Last</th>
               <th class="num" title="Number of endorsers (+1s); hover for names">+1s</th>
-              <th class="num" title="Number of reviews">Rev.</th>
-              <th class="num" title="Number of comments">Comm.</th>
-              <th class="num" title="Number of author responses">Resp.</th>
-              <th class="num" title="Number of OME-Zarr versions affected">Ver.</th>
+              <th class="num" title="Number of reviews — click for details">Rev.</th>
+              <th class="num" title="Number of comments — click for details">Comm.</th>
+              <th class="num" title="Number of author responses — click for details">Resp.</th>
+              <th class="num" title="Number of OME-Zarr versions affected — click for details">Ver.</th>
               <th title="Authors, shown as initials; hover for full names">Auth.</th>
 
             </tr>
@@ -210,12 +251,26 @@
     <footer id="footer"></footer>
   </main>
 
+  <!-- Modal for review/comment/response/version details -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-head">
+        <h3 id="modal-title"></h3>
+        <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
 <script>
 const YAML_FILE = "ngff_rfcs.yaml";
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
   ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 const dash = "<span class='muted'>—</span>";
+
+// Holds the parsed RFC list so the modal can look up entries by index.
+let RFCS = [];
 
 function statusPill(status, code, text) {
   if (!status && !code) return dash;
@@ -289,18 +344,16 @@ function dateShort(iso, href) {
   return { display, sort: s };
 }
 
-// Compact summary for review/comment lists: the total count followed by the
-// short id of each entry (1, 1b, 2 …) linked to its own URL, e.g. "4 (1, 1b, 2, 2b)".
-function entriesCompact(list) {
-  if (!Array.isArray(list) || !list.length) return "0";
-  const links = list.map(e => {
-    const label = String(e.id || "").split("/").pop() || "?";
-    const text = esc(label);
-    return e.url
-      ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${text}</a>`
-      : text;
-  }).join(", ");
-  return `${list.length} <span class="ids">(${links})</span>`;
+// Clickable count cell. Stores the RFC index and field so the modal can fetch
+// the entries on click. Sorts on the count.
+function recCell(list, rfcIdx, field) {
+  const n = Array.isArray(list) ? list.length : 0;
+  if (!n) return { display: "0", "@data-count": 0 };
+  const display =
+    `<span class="recs clickable" data-rfc="${rfcIdx}" data-field="${field}" ` +
+    `role="button" tabindex="0" title="Click for details">` +
+    `<span class="rec-count">${n}</span></span>`;
+  return { display, "@data-count": n };
 }
 
 function num(rfc) {
@@ -315,6 +368,14 @@ function rfcLink(rfc) {
   return rfc.url ? `<a href="${esc(rfc.url)}" target="_blank" rel="noopener">${label}</a>` : label;
 }
 
+// Title cell with the description exposed on hover.
+function titleCell(rfc) {
+  const title = rfc.title || dash;
+  const desc = rfc.description;
+  if (!desc) return esc(rfc.title || "") || dash;
+  return `<span class="title-cell" title="${esc(desc)}">${esc(title)}</span>`;
+}
+
 function descOf(rfc) {
   return rfc.title || rfc.description || "";
 }
@@ -326,10 +387,50 @@ function mergeYear(rfc) {
   return null;
 }
 
+// ---- Modal handling ----
+const FIELD_LABELS = { reviews: "Reviews", comments: "Comments", responses: "Responses", versions: "Versions" };
+
+function openModal(rfcIdx, field) {
+  const rfc = RFCS[rfcIdx];
+  if (!rfc) return;
+  const list = Array.isArray(rfc[field]) ? rfc[field] : [];
+  const n = num(rfc);
+  document.getElementById("modal-title").textContent =
+    `RFC-${n ?? "?"} · ${FIELD_LABELS[field] || field}`;
+
+  const body = document.getElementById("modal-body");
+  if (!list.length) {
+    body.innerHTML = `<p class="empty">No ${FIELD_LABELS[field].toLowerCase()} recorded.</p>`;
+  } else {
+    const items = list.map(e => {
+      const shortId = String(e.id || "").split("/").pop() || "?";
+      const idHtml = e.url
+        ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(shortId)}</a>`
+        : esc(shortId);
+      const authors = Array.isArray(e.authors)
+        ? e.authors.map(a => esc(a && a.name ? a.name : a)).filter(Boolean).join(", ")
+        : "";
+      const bits = [];
+      if (e.date) bits.push(esc(e.date));
+      if (e.related_to) bits.push("re: " + esc(String(e.related_to).split("/").pop()));
+      const meta = bits.length ? `<div class="rec-meta">${bits.join(" · ")}</div>` : "";
+      const auth = authors ? `<div class="rec-authors">${authors}</div>` : "";
+      return `<li><span class="rec-id">${idHtml}</span>${meta}${auth}</li>`;
+    }).join("");
+    body.innerHTML = `<ul class="rec-list">${items}</ul>`;
+  }
+  document.getElementById("modal-overlay").classList.add("open");
+}
+
+function closeModal() {
+  document.getElementById("modal-overlay").classList.remove("open");
+}
+
 function render(doc) {
   const map = doc.ngff_rfcs || {};
   // sort by RFC number
   const rfcs = Object.values(map).sort((a, b) => (num(a) ?? 1e9) - (num(b) ?? 1e9));
+  RFCS = rfcs;
 
   if (doc.last_updated) {
     document.getElementById("updated").textContent =
@@ -341,20 +442,20 @@ function render(doc) {
 
 
   // ---- Detail table ----
-  const detailRows = rfcs.map(r => {
+  const detailRows = rfcs.map((r, i) => {
     const pr   = dateShort(r.pr_merge_date, r.pr_url);
     const last = dateShort(r.last_text_commit_date);
     return [
       rfcLink(r),
-      r.title,
+      titleCell(r),
       statusPill(r.status, r.state_code, r.status_text),
       { display: pr.display,   "@data-sort": pr.sort },
       { display: last.display, "@data-sort": last.sort },
       peopleCount(r.endorsers),
-      entriesCompact(r.reviews),
-      entriesCompact(r.comments),
-      entriesCompact(r.responses),
-      entriesCompact(r.versions),
+      recCell(r.reviews,   i, "reviews"),
+      recCell(r.comments,  i, "comments"),
+      recCell(r.responses, i, "responses"),
+      recCell(r.versions,  i, "versions"),
       peopleInitials(r.authors),
     ];
   });
@@ -365,26 +466,45 @@ function render(doc) {
     info: true,
     order: [[0, "asc"]],
     columnDefs: [
-      { targets: [0,  3, 4, 5], className: "num" },
+      { targets: [0, 3, 4, 5], className: "num" },
       // Date columns: render display HTML, sort on the raw ISO date string.
       { targets: [3, 4],
         render: (d, t) => (t === "sort" || t === "type") ? (d["@data-sort"] || "") : d.display },
       { targets: 5, type: "num", render: (d, t) =>
           t === "sort" ? (parseInt(String(d).replace(/<[^>]*>/g, ""), 10) || 0) : d },
-      { targets: [6, 7, 8, 9], className: "recs",
+      // Clickable count columns: sort on the numeric count.
+      { targets: [6, 7, 8, 9], className: "recs num",
         type: "num",
-        render: (d, t) => t === "sort" ? (parseInt(d, 10) || 0) : d },
+        render: (d, t) => (t === "sort" || t === "type") ? (d["@data-count"] || 0) : d.display },
       { targets: 0, type: "num", render: (d, t) =>
           t === "sort" ? (/(\d+)/.exec(d) || [0,1e9])[1] * 1 : d },
     ],
     language: { search: "Filter:" },
   });
 
+  // Delegate clicks on count cells to open the modal.
+  $("#detail tbody").on("click", "span.recs.clickable", function () {
+    openModal(parseInt(this.dataset.rfc, 10), this.dataset.field);
+  });
+  $("#detail tbody").on("keydown", "span.recs.clickable", function (e) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openModal(parseInt(this.dataset.rfc, 10), this.dataset.field);
+    }
+  });
+
   document.getElementById("detail-section").hidden = false;
   document.getElementById("footer").innerHTML =
-    `Source: <a href="${esc(doc.source || "https://github.com/ome/ngff")}" target="_blank" rel="noopener">${esc(doc.source || "ome/ngff")}</a>. ` +
+    `Source: <a href="${esc(doc.source || "https://github.com/lubianat/rfc_stats")}" target="_blank" rel="noopener">${esc(doc.source || "lubianat/rfc_stats")}</a>. ` +
     `Generated from <code>${YAML_FILE}</code>.`;
 }
+
+// Modal close wiring
+document.getElementById("modal-close").addEventListener("click", closeModal);
+document.getElementById("modal-overlay").addEventListener("click", e => {
+  if (e.target.id === "modal-overlay") closeModal();
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
 
 fetch(YAML_FILE)
   .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.text(); })
