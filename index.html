@@ -42,25 +42,12 @@
     background: var(--rtd-bg);
   }
 
-  /* Top bar, echoing the RTD project header */
-  .topbar {
-    background: var(--rtd-dark);
-    color: #fff;
-    padding: 18px 0;
-  }
-  .topbar .wrap { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
-  .topbar h1 {
-    font-family: "Roboto Slab", "Lato", serif;
-    font-weight: 700;
-    font-size: 1.45rem;
-    margin: 0;
-    color: #fff;
-  }
-  .topbar .sub { color: #b3b3b3; font-size: .85rem; }
+  /* Updated timestamp, quiet caption above the content */
+  .updated { color: var(--rtd-muted); font-size: .82rem; margin: 0 0 22px; }
 
   .wrap { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
 
-  main { padding: 36px 0 80px; }
+  main { padding: 40px 0 80px; }
 
   section { margin-bottom: 52px; }
 
@@ -128,6 +115,12 @@
   .status.draft      { background: #fff3d4; color: #8a6d00; }
   .status.withdrawn  { background: #fde7e7; color: #b33; }
   .status.unknown    { background: #efefef; color: #777; }
+  .status[title]     { cursor: help; }
+
+  .compact-people { white-space: nowrap; }
+  .compact-people .more,
+  .more { color: var(--rtd-blue); font-weight: 700; font-size: .82em; cursor: help; }
+  span[title] { text-underline-offset: 2px; }
 
   .muted { color: var(--rtd-muted); }
   .nowrap { white-space: nowrap; }
@@ -155,6 +148,10 @@
   .people li { display: inline; }
   .people li:not(:last-child)::after { content: ", "; }
 
+  /* Compact review/comment id list: "4 (1, 1b, 2, 2b)" */
+  .ids { color: var(--rtd-muted); white-space: nowrap; }
+  td.recs { white-space: nowrap; }
+
   footer { color: var(--rtd-muted); font-size: .8rem; padding: 24px 0 60px; }
   code { color: var(--rtd-code); background: #f7f7f7; padding: 1px 4px; border-radius: 2px; font-size: .85em; }
 
@@ -167,14 +164,8 @@
 </head>
 
 <body>
-  <header class="topbar">
-    <div class="wrap">
-      <h1>OME-NGFF RFC Listing</h1>
-      <span class="sub" id="updated"></span>
-    </div>
-  </header>
-
   <main class="wrap">
+    <p class="updated" id="updated"></p>
     <div id="boot"></div>
 
     <section id="overview-section" hidden>
@@ -186,7 +177,7 @@
           <tr>
             <th class="num">RFC</th>
             <th>Description</th>
-            <th class="num">Year</th>
+            <th class="num">Year<br><span class="muted" style="font-weight:400;font-size:.75rem;">merge date</span></th>
             <th class="num">Last change</th>
             <th class="num">Reviews</th>
             <th class="num">Comments</th>
@@ -204,18 +195,15 @@
           <thead>
             <tr>
               <th class="num">RFC</th>
-              <th>Title</th>
               <th>Status</th>
-              <th class="num">Year</th>
               <th class="num">PR merged</th>
               <th class="num">Last commit</th>
-              <th>OME-Zarr ver.</th>
               <th>Authors</th>
               <th>Endorsers</th>
-              <th class="num">Rev.</th>
-              <th class="num">Com.</th>
-              <th class="num">Resp.</th>
-              <th class="num">Ver.</th>
+              <th class="num">Reviews</th>
+              <th class="num">Comments</th>
+              <th class="num">Responses</th>
+              <th class="num">Versions</th>
               <th>Links</th>
             </tr>
           </thead>
@@ -234,22 +222,52 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
   ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 const dash = "<span class='muted'>—</span>";
 
-function statusPill(status, code) {
-  if (!status) return dash;
-  const key = status.toLowerCase();
+function statusPill(status, code, text) {
+  if (!status && !code) return dash;
+  const key = (status || "").toLowerCase();
   let cls = "unknown";
   if (key.includes("adopt")) cls = "adopted";
   else if (key.includes("review")) cls = "review";
   else if (key.includes("draft")) cls = "draft";
   else if (key.includes("withdraw") || key.includes("supersed")) cls = "withdrawn";
-  const codeTxt = code ? ` (${esc(code)})` : "";
-  return `<span class="status ${cls}">${esc(status)}${codeTxt}</span>`;
+  const label = code || status;
+  // Tooltip: the full prose if available, else the human status label.
+  const tip = esc(text || status || code);
+  return `<span class="status ${cls}" title="${tip}">${esc(label)}</span>`;
 }
 
 function people(list) {
   if (!Array.isArray(list) || !list.length) return dash;
   const items = list.map(p => `<li>${esc(p && p.name ? p.name : p)}</li>`).join("");
   return `<ul class="people">${items}</ul>`;
+}
+
+// Compact people cell: first name, then "+N" if there are more. The full list
+// is available on hover via the title attribute. Keeps wide author/endorser
+// lists from blowing out the table width.
+function peopleCompact(list) {
+  if (!Array.isArray(list) || !list.length) return dash;
+  const names = list.map(p => (p && p.name ? p.name : p)).filter(Boolean);
+  if (!names.length) return dash;
+  const first = esc(names[0]);
+  const extra = names.length - 1;
+  const full = esc(names.join(", "));
+  if (extra <= 0) return `<span title="${full}">${first}</span>`;
+  return `<span class="compact-people" title="${full}">${first} <span class="more">+${extra}</span></span>`;
+}
+
+// Compact summary for review/comment lists: the total count followed by the
+// short id of each entry (1, 1b, 2 …) linked to its own URL, e.g. "4 (1, 1b, 2, 2b)".
+function entriesCompact(list) {
+  if (!Array.isArray(list) || !list.length) return "0";
+  const links = list.map(e => {
+    const label = String(e.id || "").split("/").pop() || "?";
+    const text = esc(label);
+    return e.url
+      ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${text}</a>`
+      : text;
+  }).join(", ");
+  return `${list.length} <span class="ids">(${links})</span>`;
 }
 
 function num(rfc) {
@@ -268,6 +286,14 @@ function descOf(rfc) {
   return rfc.title || rfc.description || "";
 }
 
+// Year shown in the overview: prefer the PR merge date (most reliable signal),
+// fall back to the scraper's computed `year`.
+function mergeYear(rfc) {
+  if (rfc.pr_merge_date) return String(rfc.pr_merge_date).slice(0, 4);
+  if (rfc.year != null) return String(rfc.year);
+  return null;
+}
+
 function render(doc) {
   const map = doc.ngff_rfcs || {};
   // sort by RFC number
@@ -275,7 +301,7 @@ function render(doc) {
 
   if (doc.last_updated) {
     document.getElementById("updated").textContent =
-      "updated " + doc.last_updated.replace("T", " ").replace("Z", " UTC");
+      "Updated " + doc.last_updated.replace("T", " ").replace("Z", " UTC");
   }
 
   const len = x => Array.isArray(x) ? x.length : 0;
@@ -286,7 +312,7 @@ function render(doc) {
     return [
       rfcLink(r),
       r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">${desc}</a>` : desc,
-      r.year != null ? esc(r.year) : dash,
+      mergeYear(r) != null ? esc(mergeYear(r)) : dash,
       r.last_text_commit_date ? esc(r.last_text_commit_date) : dash,
       len(r.reviews),
       len(r.comments),
@@ -308,25 +334,20 @@ function render(doc) {
 
   // ---- Detail table ----
   const detailRows = rfcs.map(r => {
-    const oz = (Array.isArray(r.oz_versions) && r.oz_versions.length)
-      ? esc(r.oz_versions.join(", ")) : dash;
     const links = [];
     if (r.url)    links.push(`<a href="${esc(r.url)}" target="_blank" rel="noopener">doc</a>`);
     if (r.pr_url) links.push(`<a href="${esc(r.pr_url)}" target="_blank" rel="noopener">PR</a>`);
     return [
       rfcLink(r),
-      esc(r.title || r.description || "") || dash,
-      statusPill(r.status, r.state_code),
-      r.year != null ? esc(r.year) : dash,
+      statusPill(r.status, r.state_code, r.status_text),
       r.pr_merge_date ? esc(r.pr_merge_date) : dash,
       r.last_text_commit_date ? esc(r.last_text_commit_date) : dash,
-      oz,
-      people(r.authors),
-      people(r.endorsers),
-      len(r.reviews),
-      len(r.comments),
-      len(r.responses),
-      len(r.versions),
+      peopleCompact(r.authors),
+      peopleCompact(r.endorsers),
+      entriesCompact(r.reviews),
+      entriesCompact(r.comments),
+      entriesCompact(r.responses),
+      entriesCompact(r.versions),
       links.length ? links.join(" · ") : dash,
     ];
   });
@@ -337,7 +358,10 @@ function render(doc) {
     info: true,
     order: [[0, "asc"]],
     columnDefs: [
-      { targets: [0, 3, 4, 5, 9, 10, 11, 12], className: "num" },
+      { targets: [0, 2, 3], className: "num" },
+      { targets: [6, 7, 8, 9], className: "recs",
+        type: "num",
+        render: (d, t) => t === "sort" ? (parseInt(d, 10) || 0) : d },
       { targets: 0, type: "num", render: (d, t) =>
           t === "sort" ? (/(\d+)/.exec(d) || [0,1e9])[1] * 1 : d },
     ],
