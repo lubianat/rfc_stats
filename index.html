@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OME-NGFF RFC Listing</title>
+
+<!-- jQuery + DataTables -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<!-- js-yaml to parse the YAML the scraper produces -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+
+<!-- Read the Docs fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;0,900;1,400&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    /* Read the Docs Sphinx theme palette */
+    --rtd-blue:    #2980b9;
+    --rtd-blue-d:  #2472a4;
+    --rtd-dark:    #343131;
+    --rtd-darker:  #2c2c2c;
+    --rtd-ink:     #404040;
+    --rtd-muted:   #707070;
+    --rtd-rule:    #e1e4e5;
+    --rtd-row-alt: #f3f6f6;
+    --rtd-bg:      #fcfcfc;
+    --rtd-code:    #e74c3c;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: "Lato", -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--rtd-ink);
+    background: var(--rtd-bg);
+  }
+
+  /* Top bar, echoing the RTD project header */
+  .topbar {
+    background: var(--rtd-dark);
+    color: #fff;
+    padding: 18px 0;
+  }
+  .topbar .wrap { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .topbar h1 {
+    font-family: "Roboto Slab", "Lato", serif;
+    font-weight: 700;
+    font-size: 1.45rem;
+    margin: 0;
+    color: #fff;
+  }
+  .topbar .sub { color: #b3b3b3; font-size: .85rem; }
+
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
+
+  main { padding: 36px 0 80px; }
+
+  section { margin-bottom: 52px; }
+
+  h2 {
+    font-family: "Roboto Slab", serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--rtd-dark);
+    margin: 0 0 4px;
+  }
+  h2 .anchor { color: var(--rtd-blue); font-weight: 400; }
+  .lead {
+    color: var(--rtd-muted);
+    font-size: .92rem;
+    margin: 0 0 18px;
+    border-left: 3px solid var(--rtd-blue);
+    padding-left: 12px;
+  }
+
+  /* DataTables, reskinned to feel like an RTD content table */
+  table.dataTable {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border: 1px solid var(--rtd-rule);
+    background: #fff;
+    margin: 0 !important;
+  }
+  table.dataTable thead th {
+    background: #fff;
+    font-family: "Roboto Slab", serif;
+    font-weight: 700;
+    color: var(--rtd-dark);
+    text-align: left;
+    border-bottom: 2px solid var(--rtd-blue) !important;
+    border-top: none;
+    padding: 11px 14px;
+    white-space: nowrap;
+  }
+  table.dataTable tbody td {
+    padding: 9px 14px;
+    border-top: 1px solid var(--rtd-rule);
+    vertical-align: top;
+  }
+  table.dataTable tbody tr:nth-child(even) { background: var(--rtd-row-alt); }
+  table.dataTable tbody tr:hover { background: #ecf3f8; }
+
+  /* Numeric columns: tabular, centered */
+  td.num, th.num { text-align: center; font-variant-numeric: tabular-nums; }
+
+  a { color: var(--rtd-blue); text-decoration: none; }
+  a:hover { color: var(--rtd-blue-d); text-decoration: underline; }
+
+  .rfc-badge {
+    display: inline-block;
+    min-width: 26px;
+    text-align: center;
+    font-weight: 700;
+    font-family: "Roboto Slab", serif;
+  }
+
+  /* Status pills mirror RTD admonition colors */
+  .status { font-size: .82rem; font-weight: 700; padding: 2px 8px; border-radius: 3px; white-space: nowrap; }
+  .status.adopted    { background: #dbfae4; color: #1f7a3d; }
+  .status.review     { background: #e7f2fa; color: var(--rtd-blue-d); }
+  .status.draft      { background: #fff3d4; color: #8a6d00; }
+  .status.withdrawn  { background: #fde7e7; color: #b33; }
+  .status.unknown    { background: #efefef; color: #777; }
+
+  .muted { color: var(--rtd-muted); }
+  .nowrap { white-space: nowrap; }
+
+  /* DataTables controls */
+  .dataTables_wrapper .dataTables_filter input,
+  .dataTables_wrapper .dataTables_length select {
+    border: 1px solid var(--rtd-rule);
+    border-radius: 3px;
+    padding: 4px 8px;
+  }
+  .dataTables_wrapper .dataTables_filter,
+  .dataTables_wrapper .dataTables_length { font-size: .85rem; margin-bottom: 10px; }
+  .dataTables_wrapper .dataTables_info,
+  .dataTables_wrapper .dataTables_paginate { font-size: .82rem; margin-top: 10px; color: var(--rtd-muted); }
+  .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: var(--rtd-blue) !important;
+    color: #fff !important;
+    border-radius: 3px;
+    border: none !important;
+  }
+
+  /* Detail table values list */
+  .people { margin: 0; padding: 0; list-style: none; }
+  .people li { display: inline; }
+  .people li:not(:last-child)::after { content: ", "; }
+
+  footer { color: var(--rtd-muted); font-size: .8rem; padding: 24px 0 60px; }
+  code { color: var(--rtd-code); background: #f7f7f7; padding: 1px 4px; border-radius: 2px; font-size: .85em; }
+
+  .error {
+    background: #fde7e7; border: 1px solid #f5c6c6; color: #a33;
+    padding: 16px 18px; border-radius: 4px; font-size: .9rem;
+  }
+  .error code { color: #a33; background: #f8d7d7; }
+</style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <h1>OME-NGFF RFC Listing</h1>
+      <span class="sub" id="updated"></span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div id="boot"></div>
+
+    <section id="overview-section" hidden>
+      <h2><span class="anchor">#</span> Overview</h2>
+      <p class="lead">One row per RFC. Review and comment counts are tallied from the
+        records table in each RFC document.</p>
+      <table id="overview" class="display" style="width:100%">
+        <thead>
+          <tr>
+            <th class="num">RFC</th>
+            <th>Description</th>
+            <th class="num">Year</th>
+            <th class="num">Last change</th>
+            <th class="num">Reviews</th>
+            <th class="num">Comments</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section id="detail-section" hidden>
+      <h2><span class="anchor">#</span> All data points</h2>
+      <p class="lead">Every field captured in <code>ngff_rfcs.yaml</code>, one row per RFC.</p>
+      <div style="overflow-x:auto;">
+        <table id="detail" class="display" style="width:100%">
+          <thead>
+            <tr>
+              <th class="num">RFC</th>
+              <th>Title</th>
+              <th>Status</th>
+              <th class="num">Year</th>
+              <th class="num">PR merged</th>
+              <th class="num">Last commit</th>
+              <th>OME-Zarr ver.</th>
+              <th>Authors</th>
+              <th>Endorsers</th>
+              <th class="num">Rev.</th>
+              <th class="num">Com.</th>
+              <th class="num">Resp.</th>
+              <th class="num">Ver.</th>
+              <th>Links</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer id="footer"></footer>
+  </main>
+
+<script>
+const YAML_FILE = "ngff_rfcs.yaml";
+
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+  ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const dash = "<span class='muted'>—</span>";
+
+function statusPill(status, code) {
+  if (!status) return dash;
+  const key = status.toLowerCase();
+  let cls = "unknown";
+  if (key.includes("adopt")) cls = "adopted";
+  else if (key.includes("review")) cls = "review";
+  else if (key.includes("draft")) cls = "draft";
+  else if (key.includes("withdraw") || key.includes("supersed")) cls = "withdrawn";
+  const codeTxt = code ? ` (${esc(code)})` : "";
+  return `<span class="status ${cls}">${esc(status)}${codeTxt}</span>`;
+}
+
+function people(list) {
+  if (!Array.isArray(list) || !list.length) return dash;
+  const items = list.map(p => `<li>${esc(p && p.name ? p.name : p)}</li>`).join("");
+  return `<ul class="people">${items}</ul>`;
+}
+
+function num(rfc) {
+  // "rfc/8" -> 8 ; fall back to the key
+  const m = /(\d+)/.exec(rfc.id || "");
+  return m ? parseInt(m[1], 10) : null;
+}
+
+function rfcLink(rfc) {
+  const n = num(rfc);
+  const label = `<span class="rfc-badge">${n ?? "?"}</span>`;
+  return rfc.url ? `<a href="${esc(rfc.url)}" target="_blank" rel="noopener">${label}</a>` : label;
+}
+
+function descOf(rfc) {
+  return rfc.title || rfc.description || "";
+}
+
+function render(doc) {
+  const map = doc.ngff_rfcs || {};
+  // sort by RFC number
+  const rfcs = Object.values(map).sort((a, b) => (num(a) ?? 1e9) - (num(b) ?? 1e9));
+
+  if (doc.last_updated) {
+    document.getElementById("updated").textContent =
+      "updated " + doc.last_updated.replace("T", " ").replace("Z", " UTC");
+  }
+
+  const len = x => Array.isArray(x) ? x.length : 0;
+
+  // ---- Overview table ----
+  const overviewRows = rfcs.map(r => {
+    const desc = esc(descOf(r)) || dash;
+    return [
+      rfcLink(r),
+      r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">${desc}</a>` : desc,
+      r.year != null ? esc(r.year) : dash,
+      r.last_text_commit_date ? esc(r.last_text_commit_date) : dash,
+      len(r.reviews),
+      len(r.comments),
+    ];
+  });
+
+  $("#overview").DataTable({
+    data: overviewRows,
+    paging: false,
+    info: false,
+    order: [[0, "asc"]],
+    columnDefs: [
+      { targets: [0, 2, 3, 4, 5], className: "num" },
+      { targets: 0, type: "num", render: (d, t) =>
+          t === "sort" ? (/(\d+)/.exec(d) || [0,1e9])[1] * 1 : d },
+    ],
+    language: { search: "Filter:" },
+  });
+
+  // ---- Detail table ----
+  const detailRows = rfcs.map(r => {
+    const oz = (Array.isArray(r.oz_versions) && r.oz_versions.length)
+      ? esc(r.oz_versions.join(", ")) : dash;
+    const links = [];
+    if (r.url)    links.push(`<a href="${esc(r.url)}" target="_blank" rel="noopener">doc</a>`);
+    if (r.pr_url) links.push(`<a href="${esc(r.pr_url)}" target="_blank" rel="noopener">PR</a>`);
+    return [
+      rfcLink(r),
+      esc(r.title || r.description || "") || dash,
+      statusPill(r.status, r.state_code),
+      r.year != null ? esc(r.year) : dash,
+      r.pr_merge_date ? esc(r.pr_merge_date) : dash,
+      r.last_text_commit_date ? esc(r.last_text_commit_date) : dash,
+      oz,
+      people(r.authors),
+      people(r.endorsers),
+      len(r.reviews),
+      len(r.comments),
+      len(r.responses),
+      len(r.versions),
+      links.length ? links.join(" · ") : dash,
+    ];
+  });
+
+  $("#detail").DataTable({
+    data: detailRows,
+    paging: false,
+    info: true,
+    order: [[0, "asc"]],
+    columnDefs: [
+      { targets: [0, 3, 4, 5, 9, 10, 11, 12], className: "num" },
+      { targets: 0, type: "num", render: (d, t) =>
+          t === "sort" ? (/(\d+)/.exec(d) || [0,1e9])[1] * 1 : d },
+    ],
+    language: { search: "Filter:" },
+  });
+
+  document.getElementById("overview-section").hidden = false;
+  document.getElementById("detail-section").hidden = false;
+  document.getElementById("footer").innerHTML =
+    `Source: <a href="${esc(doc.source || "https://github.com/ome/ngff")}" target="_blank" rel="noopener">${esc(doc.source || "ome/ngff")}</a>. ` +
+    `Generated from <code>${YAML_FILE}</code>.`;
+}
+
+fetch(YAML_FILE)
+  .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.text(); })
+  .then(txt => render(jsyaml.load(txt)))
+  .catch(err => {
+    document.getElementById("boot").innerHTML =
+      `<div class="error"><strong>Could not load <code>${YAML_FILE}</code>.</strong><br>` +
+      `${esc(err.message)}.<br>Serve this folder over HTTP (browsers block ` +
+      `<code>fetch</code> on <code>file://</code>): e.g. <code>python3 -m http.server</code> ` +
+      `in the directory containing <code>index.html</code> and <code>${YAML_FILE}</code>.</div>`;
+  });
+</script>
+</body>
+</html>
